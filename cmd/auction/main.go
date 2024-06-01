@@ -12,21 +12,36 @@ import (
 	"fullcycle-auction_go/internal/usecase/auction_usecase"
 	"fullcycle-auction_go/internal/usecase/bid_usecase"
 	"fullcycle-auction_go/internal/usecase/user_usecase"
+	"log"
+	"os"
+	"time"
+
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 	"go.mongodb.org/mongo-driver/mongo"
-	"log"
 )
 
 func main() {
 	ctx := context.Background()
 
+	// Carregando variáveis de ambiente
 	if err := godotenv.Load("cmd/auction/.env"); err != nil {
-		log.Fatal("Error trying to load env variables")
+		log.Fatalf("Error loading .env file: %v", err)
 		return
 	}
 
-	databaseConnection, err := mongodb.NewMongoDBConnection(ctx)
+	// Adicionando uma espera para garantir que o MongoDB está pronto
+	time.Sleep(10 * time.Second)
+
+	// Pegando a URL do MongoDB das variáveis de ambiente
+	mongoURL := os.Getenv("MONGODB_URL")
+	if mongoURL == "" {
+		log.Fatal("MONGODB_URL is not set in the environment")
+		return
+	}
+
+	// Conectando ao MongoDB
+	databaseConnection, err := mongodb.NewMongoDBConnection(ctx, mongoURL)
 	if err != nil {
 		log.Fatal(err.Error())
 		return
